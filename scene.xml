@@ -1,0 +1,61 @@
+<mujoco model="so101 scene">
+  <!-- so101.xml and the meshes are copied from my so101-sim repo. The only
+       change in so101.xml is the "tip" site on the gripper. -->
+  <!-- elliptic friction cones + high impratio stop the cube from slipping
+       out of the gripper. without these the grasp never held. -->
+  <option timestep="0.002" cone="elliptic" impratio="10"/>
+
+  <default>
+    <joint damping="0.6" armature="0.03" frictionloss="0.05"/>
+    <position kp="20" kv="0.5" forcerange="-3.5 3.5" inheritrange="1"/>
+  </default>
+
+  <include file="so101.xml"/>
+
+  <visual>
+    <headlight diffuse="0.6 0.6 0.6" ambient="0.3 0.3 0.3" specular="0 0 0"/>
+    <global azimuth="150" elevation="-25"/>
+  </visual>
+
+  <asset>
+    <texture type="skybox" builtin="gradient" rgb1="0.3 0.5 0.7" rgb2="0 0 0" width="512" height="3072"/>
+    <texture type="2d" name="grid" builtin="checker" mark="edge" rgb1="0.2 0.3 0.4" rgb2="0.1 0.2 0.3" markrgb="0.8 0.8 0.8" width="300" height="300"/>
+    <material name="grid" texture="grid" texuniform="true" texrepeat="5 5" reflectance="0.2"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0 0 1.5" dir="0 0 -1" directional="true"/>
+    <geom name="floor" size="0 0 0.05" type="plane" material="grid"/>
+    <!-- 2.5 cm cube, pick.py moves it to a random spot at the start -->
+    <body name="cube" pos="0.22 0 0.0125">
+      <freejoint name="cube"/>
+      <geom name="cube" type="box" size="0.0125 0.0125 0.0125" rgba="0.8 0.2 0.2 1" mass="0.02"/>
+    </body>
+
+    <!-- tray to drop the cube in: 10 x 10 cm, 2 cm walls -->
+    <body name="tray" pos="0.12 0.2 0">
+      <geom type="box" size="0.05 0.05 0.002" pos="0 0 0.002" rgba="0.3 0.3 0.35 1"/>
+      <geom type="box" size="0.05 0.003 0.01" pos="0 0.05 0.01" rgba="0.3 0.3 0.35 1"/>
+      <geom type="box" size="0.05 0.003 0.01" pos="0 -0.05 0.01" rgba="0.3 0.3 0.35 1"/>
+      <geom type="box" size="0.003 0.05 0.01" pos="0.05 0 0.01" rgba="0.3 0.3 0.35 1"/>
+      <geom type="box" size="0.003 0.05 0.01" pos="-0.05 0 0.01" rgba="0.3 0.3 0.35 1"/>
+    </body>
+  </worldbody>
+
+  <!-- base_link is welded to the world, so MuJoCo does not skip its
+       parent/child contact with shoulder_link the way it does elsewhere. -->
+  <contact>
+    <exclude body1="base_link" body2="shoulder_link"/>
+  </contact>
+
+  <!-- STS3215 servos run in position mode, so position actuators are the
+       closest match. forcerange ~ the servo's stall torque in N*m. -->
+  <actuator>
+    <position name="shoulder_pan" joint="shoulder_pan"/>
+    <position name="shoulder_lift" joint="shoulder_lift"/>
+    <position name="elbow_flex" joint="elbow_flex"/>
+    <position name="wrist_flex" joint="wrist_flex"/>
+    <position name="wrist_roll" joint="wrist_roll"/>
+    <position name="gripper" joint="gripper"/>
+  </actuator>
+</mujoco>
