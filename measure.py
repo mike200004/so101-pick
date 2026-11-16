@@ -3,10 +3,12 @@
 # (r = distance out from the base, z = height).
 
 import math
+import os
 
 import mujoco
 
-model = mujoco.MjModel.from_xml_path("scene.xml")
+SCENE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scene.xml")
+model = mujoco.MjModel.from_xml_path(SCENE)
 data = mujoco.MjData(model)
 mujoco.mj_forward(model, data)
 
